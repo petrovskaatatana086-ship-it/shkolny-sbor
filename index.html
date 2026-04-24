@@ -139,11 +139,12 @@
         .check-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--indigo); flex-shrink: 0; }
         .mini-input { width: 80px !important; padding: 8px !important; font-size: 0.85rem !important; border-radius: 12px !important; text-align: center; color: var(--text-main); }
 
-        /* Аналитика и Архив */
-        .ana-summary { border-top: 10px solid var(--text-main); padding: 35px; border-radius: var(--radius-xl); background: white; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-        .ana-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1.5px dashed #f1f5f9; gap: 10px; }
+        /* Аналитика */
+        .ana-summary { border-top: 10px solid var(--text-main); padding: 35px 25px; border-radius: var(--radius-xl); background: white; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        .ana-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1.5px dashed #f1f5f9; gap: 12px; flex-wrap: wrap; }
         .ana-row:last-child { border-bottom: none; margin-top: 15px; }
-        .ana-val-xl { font-weight: 900; font-size: 1.6rem; color: var(--text-main); white-space: nowrap; }
+        .ana-label { flex: 1; min-width: 140px; font-size: 0.85rem; font-weight: 700; }
+        .ana-val-xl { font-weight: 900; font-size: 1.5rem; color: var(--text-main); white-space: nowrap; text-align: right; }
 
         .archive-details { display: none; background: rgba(0,0,0,0.02); border-radius: 24px; padding: 20px; margin-top: 15px; overflow: hidden; }
         .archive-details.active { display: block; animation: slideDown 0.3s ease-out; }
@@ -199,7 +200,7 @@
 
     <!-- АНАЛИТИКА -->
     <div id="analytics" class="section">
-        <span class="lbl-tiny">ШКОЛЬНЫЙ СБОР: ОТЧЕТЫ</span>
+        <span class="lbl-tiny">ОТЧЕТЫ И ДОЛГИ</span>
         <h1 style="font-weight: 900; font-size: 2.2rem; margin-bottom: 30px; letter-spacing: -2px;">Анализ</h1>
         <div class="card" style="padding: 25px; border: none; background: rgba(255,255,255,0.6);">
             <div class="input-group" style="margin-bottom:15px;">
@@ -323,6 +324,16 @@
     </div>
 </div>
 
+<div id="studentModal" class="modal" onclick="closeModalOnOuterClick(event)">
+    <div class="modal-content">
+        <h2 style="font-weight: 900; margin-bottom: 25px; color: var(--text-main);">Новый ученик</h2>
+        <div class="modal-body">
+            <div class="input-group"><label class="lbl-tiny">ФИО</label><input type="text" id="newStudentName" placeholder="Иванов Иван"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-primary" onclick="addStudent()">Добавить</button></div>
+    </div>
+</div>
+
 <script>
     let db = { students: [], collections: [], transactions: [] };
     const KEY = 'CLASS_FUNDS_FINAL_V15_PRO'; 
@@ -381,8 +392,7 @@
     // --- Restore & Backup ---
     function exportBackup() { 
         const b = new Blob([JSON.stringify(db)], { type: 'application/json' });
-        const a = document.createElement('a'); 
-        a.href = URL.createObjectURL(b); a.download = `ClassFunds_Export_${getToday()}.json`; a.click(); 
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `ClassFunds_Export_${getToday()}.json`; a.click(); 
     }
     function triggerRestore() { document.getElementById('restoreFile').click(); }
     function handleRestore(e) { 
@@ -524,7 +534,7 @@
         if(close) s.archived = true; hideModal('transferModal'); save(); showToast("Перенесено");
     }
 
-    // --- Finance Logic ---
+    // --- Finance ---
     function openPay(cid, tid = null) {
         const coll = db.collections.find(x => String(x.id) === String(cid)); if (!coll) return;
         document.getElementById('transCollId').value = cid;
@@ -577,7 +587,6 @@
         else { details.classList.remove('active'); btn.innerHTML = `<i class="fas fa-chevron-down"></i> Участники`; }
     }
 
-    // --- Core Render ---
     function render() {
         const actives = db.collections.filter(c => !c.archived);
         const activeIds = actives.map(c => String(c.id));
@@ -656,7 +665,7 @@
             const n = t.sid ? (db.students.find(x => x.id == t.sid)?.name || 'Ученик') : (t.note || 'Расход');
             return `<div class="history-card"><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${n}</b><span style="${t.type === 'in' ? 'color:var(--success)' : 'color:var(--danger)'}">${t.type === 'in' ? '+' : '-'} ${formatM(t.val)}</span></div><div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-size:0.8rem; color:var(--text-muted); font-weight:800;">${formatDateDisp(t.date)}</span><div style="display:flex; gap:10px;"><button class="btn-glass" style="padding:6px 14px; font-size:0.65rem;" onclick="${t.type==='in' ? 'openPay' : 'openExp'}('${t.cid}','${t.id}')">Изм</button><button class="btn-glass text-danger" style="padding:6px 14px; font-size:0.65rem;" onclick="delTrans('${t.id}')">Удал</button></div></div></div>`;
         }).join('');
-        document.getElementById('anaContent').innerHTML = `<div class="summary-card ana-summary"><div class="ana-row"><span>Сальдо на ${formatDateDisp(start)}</span><span class="ana-val-xl">${formatM(startBal)}</span></div><div class="ana-row"><span>Приход</span><span class="ana-val-xl text-success">+ ${formatM(periodInc)}</span></div><div class="ana-row"><span>Расход</span><span class="ana-val-xl text-danger">- ${formatM(periodOut)}</span></div><div class="ana-row" style="border:none;"><b>ИТОГО НА ${formatDateDisp(end)}</b><span class="ana-val-xl" style="font-size:2rem;">${formatM(endBal)}</span></div></div>${partHtml}<h3 style="margin:40px 0 16px; font-weight:900; color:var(--text-main);">Операции</h3>${hist || 'Нет данных'}`;
+        document.getElementById('anaContent').innerHTML = `<div class="summary-card ana-summary"><div class="ana-row"><span class="ana-label">Сальдо на ${formatDateDisp(start)}</span><span class="ana-val-xl">${formatM(startBal)}</span></div><div class="ana-row"><span class="ana-label">Приход</span><span class="ana-val-xl text-success">+ ${formatM(periodInc)}</span></div><div class="ana-row"><span class="ana-label">Расход</span><span class="ana-val-xl text-danger">- ${formatM(periodOut)}</span></div><div class="ana-row" style="border:none;"><b class="ana-label" style="font-size:0.9rem;">ИТОГО НА ${formatDateDisp(end)}</b><span class="ana-val-xl" style="font-size:2rem;">${formatM(endBal)}</span></div></div>${partHtml}<h3 style="margin:40px 0 16px; font-weight:900; color:var(--text-main);">Операции</h3>${hist || 'Нет данных'}`;
     }
 
     function getBalance(cid) { const trs = db.transactions.filter(t => String(t.cid) === String(cid)); return trs.filter(t => t.type === 'in').reduce((s,t) => s + t.val, 0) - trs.filter(t => t.type === 'out').reduce((s,t) => s + t.val, 0); }
