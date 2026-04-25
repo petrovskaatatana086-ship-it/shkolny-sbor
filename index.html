@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Школьный сбор — Crystal Pro Blue</title>
     
-    <!-- SheetJS для работы с Excel -->
+    <!-- Манифест для PWA (Оффлайн работа) -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCo0LrQvtC70YzQvdGL0Lkg0KHQsdC+0YAiLAogICJzaG9ydF9uYW1lIjogItCh0LHQvtGA0YsiLAogICJpY29ucyI6IFsgeyAic3JjIjogImh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzI2NjMvMjY2MzA2OS5wbmciLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3BuZyIgfSBdLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2Y4ZmFmYyIsCiAgInRoZW1lX2NvbG9yIjogIiMxZTNhOGEiCn0=">
+
+    <!-- SheetJS для Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +18,6 @@
     
     <style>
         :root {
-            /* ТЕМНО-СИНИЙ ЦВЕТ ДЛЯ ВСЕГО ТЕКСТА */
             --text-main: #1e3a8a; 
             --text-muted: #64748b;
             --glass-bg: rgba(255, 255, 255, 0.45);
@@ -31,7 +33,8 @@
             
             --success: #10b981;
             --danger: #ef4444;
-            --amber-bright: #d97706;
+            --blue-link: #2563eb;
+            --orange-warn: #f97316; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -42,12 +45,10 @@
             color: var(--text-main); 
             padding-bottom: 120px; 
             min-height: 100vh;
-            letter-spacing: -0.02em;
         }
 
         #app { max-width: 500px; margin: 0 auto; }
 
-        /* Навигация */
         .nav-bar { 
             position: fixed; bottom: 0; left: 0; right: 0; 
             background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
@@ -57,116 +58,104 @@
         }
         .nav-item { 
             flex: 1; text-align: center; color: #cbd5e1; cursor: pointer; 
-            display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
         }
         .nav-item.active { color: var(--text-main); }
-        .nav-item i { font-size: 1.4rem; }
         .nav-item span { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; }
 
         .section { display: none; padding: 24px; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         .section.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Шапка с балансом */
         .summary-card { 
             background: var(--glass-bg); border: 1.5px solid var(--glass-border); backdrop-filter: blur(25px);
             border-radius: var(--radius-xl); padding: 40px 20px; margin-bottom: 30px; 
             text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.02);
         }
         .lbl-tiny { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 10px; }
-        .big-balance { font-size: 3.4rem; font-weight: 900; letter-spacing: -3px; color: var(--text-main); line-height: 1.1; }
+        .big-balance { font-size: 3rem; font-weight: 900; letter-spacing: -2px; color: var(--text-main); line-height: 1.1; }
 
-        /* Стеклянные карточки */
         .card { 
             background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-radius: var(--radius-xl); padding: 30px; margin-bottom: 24px; 
             border: 1.5px solid var(--glass-border); position: relative; overflow: hidden;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 15px 45px rgba(0,0,0,0.03);
         }
-        .card:active { transform: scale(0.97); }
 
-        .card.t-indigo { background: rgba(99, 102, 241, 0.08); border-top: 8px solid var(--indigo); }
-        .card.t-rose { background: rgba(244, 63, 94, 0.08); border-top: 8px solid var(--rose); }
-        .card.t-amber { background: rgba(245, 158, 11, 0.08); border-top: 8px solid var(--amber); }
-        .card.t-emerald { background: rgba(16, 185, 129, 0.08); border-top: 8px solid var(--emerald); }
-        .card.t-violet { background: rgba(139, 92, 246, 0.08); border-top: 8px solid var(--violet); }
+        .card.t-indigo { border-top: 8px solid var(--indigo); }
+        .card.t-rose { border-top: 8px solid var(--rose); }
+        .card.t-amber { border-top: 8px solid var(--amber); }
+        .card.t-emerald { border-top: 8px solid var(--emerald); }
+        .card.t-violet { border-top: 8px solid var(--violet); }
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        .card-title { font-size: 1.7rem; font-weight: 900; color: var(--text-main); letter-spacing: -0.8px; flex: 1; }
+        .card-title { font-size: 1.7rem; font-weight: 900; color: var(--text-main); letter-spacing: -0.8px; flex: 1; cursor: pointer; }
         .card-actions { display: flex; gap: 15px; color: #cbd5e1; }
-        .card-actions i { cursor: pointer; transition: 0.2s; font-size: 1.2rem; padding: 5px; }
-        .card-actions i:hover { color: var(--text-main); transform: rotate(10deg); }
-
-        /* Сетка показателей 2х2 */
+        .card-actions i { cursor: pointer; padding: 5px; font-size: 1.2rem; }
+        
         .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 10px; margin: 25px 0; }
         .st-item { text-align: left; padding-left: 5px; }
         .st-lbl { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 5px; display: block; }
         .st-val { font-size: 1.05rem; font-weight: 900; color: var(--text-main); }
 
+        /* Цвета показателей в карточках */
+        .txt-collected { color: var(--success) !important; }
+        .txt-expense { color: var(--danger) !important; }
+        .txt-remain { color: var(--orange-warn) !important; }
+
         .progress-line { height: 8px; background: rgba(0,0,0,0.05); border-radius: 10px; margin: 15px 0; overflow: hidden; }
         .progress-bar { height: 100%; border-radius: 10px; transition: width 1.5s ease-out; }
         
-        .t-indigo .progress-bar { background: var(--indigo); }
-        .t-rose .progress-bar { background: var(--rose); }
-        .t-amber .progress-bar { background: var(--amber); }
-        .t-emerald .progress-bar { background: var(--emerald); }
-        .t-violet .progress-bar { background: var(--violet); }
-
-        .flex-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .flex-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 10px; }
         .pill { padding: 6px 14px; background: rgba(255,255,255,0.5); border-radius: 30px; font-size: 0.75rem; font-weight: 900; border: 1px solid var(--glass-border); color: var(--text-main); }
 
-        /* Кнопки */
         .btn { border: none; padding: 18px 24px; border-radius: 24px; font-weight: 900; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; }
-        .btn-primary { background: var(--indigo); color: white; width: 100%; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2); }
+        .btn-primary { background: var(--indigo); color: white; width: 100%; }
         .btn-glass { background: rgba(255, 255, 255, 0.5); border: 1px solid var(--glass-border); color: var(--text-main); }
-        .btn-danger { background: #fee2e2; color: var(--danger); font-weight: 900; }
-        .btn-fab { position: fixed; bottom: 100px; right: 24px; width: 68px; height: 68px; border-radius: 34px; z-index: 900; background: var(--indigo); color: white; box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3); border: none; font-size: 1.6rem; transition: 0.3s; }
+        .btn-fab { position: fixed; bottom: 100px; right: 24px; width: 68px; height: 68px; border-radius: 34px; z-index: 900; background: var(--indigo); color: white; box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3); border: none; font-size: 1.6rem; }
 
-        /* Модальные окна */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: white; width: 100%; max-width: 420px; border-radius: var(--radius-xl); padding: 40px 40px 0; box-shadow: 0 40px 120px rgba(0,0,0,0.12); max-height: 85vh; display: flex; flex-direction: column; border: 1px solid var(--glass-border); }
-        .modal-body { overflow-y: auto; flex: 1; padding: 10px 0 30px; }
-        .modal-footer { padding: 30px 0 40px; border-top: 1px solid #f1f5f9; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(25px); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; width: 100%; max-width: 420px; border-radius: var(--radius-xl); padding: 30px 40px 40px; box-shadow: 0 40px 120px rgba(0,0,0,0.12); max-height: 85vh; display: flex; flex-direction: column; border: 1px solid var(--glass-border); }
+        .modal-body { overflow-y: auto; flex: 1; padding: 10px 0 20px; }
+        .modal-footer { padding-top: 10px; }
 
-        .input-group { margin-bottom: 25px; }
-        input, select { width: 100%; padding: 18px; border-radius: 20px; border: 1.5px solid #f1f5f9; background: #f9fafb; font-size: 1.1rem; font-weight: 700; color: var(--text-main); outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--indigo); background: white; }
-
-        .scroller { background: #f8fafc; border-radius: 24px; max-height: 250px; overflow-y: auto; padding: 10px; border: 1px solid #f1f5f9; }
+        input, select { width: 100%; padding: 18px; border-radius: 20px; border: 1.5px solid #f1f5f9; background: #f9fafb; font-size: 1.1rem; font-weight: 700; color: var(--text-main); outline: none; }
+        
+        .scroller { background: #f8fafc; border-radius: 24px; max-height: 350px; overflow-y: auto; padding: 10px; border: 1.5px solid #f1f5f9; }
         .check-item { display: flex; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid rgba(0,0,0,0.02); }
-        .check-item label { flex: 1; font-weight: 800; cursor: pointer; font-size: 0.95rem; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .check-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--indigo); flex-shrink: 0; }
-        .mini-input { width: 80px !important; padding: 8px !important; font-size: 0.85rem !important; border-radius: 12px !important; text-align: center; color: var(--text-main); }
+        .check-item label { flex: 1; font-weight: 800; font-size: 1rem; color: var(--text-main); white-space: normal; cursor: pointer; line-height: 1.2; }
+        .mini-input { width: 90px !important; padding: 10px !important; font-size: 0.9rem !important; border-radius: 12px !important; text-align: center; color: var(--text-main); border: 1.5px solid #e2e8f0 !important; flex-shrink: 0; }
 
-        /* Аналитика */
+        /* Цвета статусов в анализе */
+        .ana-success { color: #10b981 !important; font-weight: 900; }
+        .ana-danger { color: #ef4444 !important; font-weight: 900; }
+        .ana-overpayment { color: #2563eb !important; font-weight: 900; }
+        .tag-outside { color: #2563eb; font-size: 0.75rem; font-weight: 800; margin-left: 4px; }
+
         .ana-summary { border-top: 10px solid var(--text-main); padding: 35px 25px; border-radius: var(--radius-xl); background: white; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-        .ana-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1.5px dashed #f1f5f9; gap: 12px; flex-wrap: wrap; }
-        .ana-row:last-child { border-bottom: none; margin-top: 15px; }
-        .ana-label { flex: 1; min-width: 140px; font-size: 0.85rem; font-weight: 700; }
-        .ana-val-xl { font-weight: 900; font-size: 1.5rem; color: var(--text-main); white-space: nowrap; text-align: right; }
+        .ana-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1.5px dashed #f1f5f9; gap: 15px; }
+        .ana-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); flex: 1; line-height: 1.2; }
+        .ana-val-xl { font-weight: 900; font-size: 1.4rem; color: var(--text-main); white-space: nowrap; text-align: right; }
+
+        @media (max-width: 480px) {
+            .ana-row { flex-wrap: wrap; gap: 4px; }
+            .ana-val-xl { text-align: left; width: 100%; font-size: 1.5rem; }
+            .ana-label { width: 100%; min-width: auto; }
+        }
 
         .archive-details { display: none; background: rgba(0,0,0,0.02); border-radius: 24px; padding: 20px; margin-top: 15px; overflow: hidden; }
         .archive-details.active { display: block; animation: slideDown 0.3s ease-out; }
         
-        .archive-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.03); font-size: 0.9rem; color: var(--text-main); }
-        .archive-item:last-child { border-bottom: none; }
-
         .btn-toggle-archive { 
             background: none; border: 1.5px solid var(--glass-border); padding: 8px 16px; border-radius: 15px; 
             font-size: 0.75rem; font-weight: 800; color: var(--text-main); cursor: pointer; transition: 0.2s;
             margin-top: 10px; display: flex; align-items: center; gap: 6px;
         }
 
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
+        .toast { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: white; padding: 16px 40px; border-radius: 50px; z-index: 5000; font-weight: 900; display: none; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; max-width: 90%; }
         .history-card { background: white; border: 1px solid #f1f5f9; padding: 25px; border-radius: 35px; margin-bottom: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-        .tag-outside { font-size: 0.7rem; color: #94a3b8; font-weight: 900; text-transform: uppercase; margin-left: 8px; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 10px; }
-
-        .toast { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); background: var(--text-main); color: white; padding: 16px 40px; border-radius: 50px; z-index: 5000; font-weight: 900; display: none; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        .text-success { color: var(--success); }
-        .text-danger { color: var(--danger); }
-        .text-amber { color: var(--amber-bright); }
     </style>
 </head>
 <body>
@@ -192,7 +181,7 @@
         <div class="summary-card">
             <span class="lbl-tiny">Всего в кассе</span>
             <div class="big-balance" id="globalBalance">0 ₽</div>
-            <div id="headerCollectionList" style="display: flex; gap: 20px; overflow-x: auto; justify-content: center; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.03); margin-top: 10px;"></div>
+            <div id="headerCollectionList" style="display: flex; gap: 20px; overflow-x: auto; justify-content: center; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.03); margin-top: 15px;"></div>
         </div>
         <div id="collectionsList"></div>
         <button class="btn-fab" onclick="openCollModal()"><i class="fas fa-plus"></i></button>
@@ -200,14 +189,14 @@
 
     <!-- АНАЛИТИКА -->
     <div id="analytics" class="section">
-        <span class="lbl-tiny">ОТЧЕТЫ И ДОЛГИ</span>
+        <span class="lbl-tiny">ОТЧЕТЫ ПО ПРОЕКТАМ</span>
         <h1 style="font-weight: 900; font-size: 2.2rem; margin-bottom: 30px; letter-spacing: -2px;">Анализ</h1>
         <div class="card" style="padding: 25px; border: none; background: rgba(255,255,255,0.6);">
             <div class="input-group" style="margin-bottom:15px;">
-                <label class="lbl-tiny">Выбор проекта</label>
+                <label class="lbl-tiny">Выбор активного проекта</label>
                 <select id="anaSelect" onchange="renderAnalytics()"></select>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="grid-dates" id="anaDatesGrid">
                 <div class="input-group" style="margin-bottom:0;">
                     <label class="lbl-tiny">С даты</label>
                     <input type="date" id="anaDateStart" onchange="renderAnalytics()">
@@ -223,7 +212,7 @@
 
     <!-- АРХИВ -->
     <div id="archive" class="section">
-        <span class="lbl-tiny">ШКОЛЬНЫЙ СБОР: ИСТОРИЯ</span>
+        <span class="lbl-tiny">ИСТОРИЯ ПРОЕКТОВ</span>
         <h1 style="font-weight: 900; font-size: 2.2rem; margin-bottom: 30px; letter-spacing: -2px;">Архив</h1>
         <div id="archiveList"></div>
     </div>
@@ -237,7 +226,7 @@
         <div id="studentsList"></div>
         
         <div style="margin-top:50px; padding-top:30px; border-top: 2px solid #f1f5f9;">
-            <h3 class="lbl-tiny">Система и Бэкап</h3>
+            <h3 class="lbl-tiny">Управление данными</h3>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
                 <button class="btn btn-glass" onclick="exportBackup()"><i class="fas fa-download"></i> Экспорт</button>
                 <button class="btn btn-primary" onclick="triggerRestore()"><i class="fas fa-upload"></i> Импорт</button>
@@ -249,10 +238,6 @@
         </div>
     </div>
 
-    <!-- Скрытые инпуты -->
-    <input type="file" id="restoreFile" style="display:none" accept=".json" onchange="handleRestore(event)">
-    <input type="file" id="excelFile" style="display:none" accept=".xlsx, .xls, .csv" onchange="handleExcelImport(event)">
-
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('collections', this)"><i class="fas fa-home"></i><span>Главная</span></div>
         <div class="nav-item" onclick="switchTab('analytics', this)"><i class="fas fa-chart-line"></i><span>Анализ</span></div>
@@ -261,26 +246,24 @@
     </div>
 </div>
 
+<input type="file" id="restoreFile" style="display:none" accept=".json" onchange="handleRestore(event)">
+<input type="file" id="excelFile" style="display:none" accept=".xlsx, .xls, .csv" onchange="handleExcelImport(event)">
+
 <!-- Modals -->
 <div id="collModal" class="modal" onclick="closeModalOnOuterClick(event)">
     <div class="modal-content">
         <h2 style="font-weight: 900; margin-bottom: 25px; color: var(--text-main);">Свойства сбора</h2>
         <div class="modal-body">
             <input type="hidden" id="editCollId">
-            <div class="input-group"><label class="lbl-tiny">Название</label><input type="text" id="collTitle" placeholder="НГ 2026"></div>
-            <div class="input-group"><label class="lbl-tiny">Сумма с чел. (₽)</label><input type="number" id="collAmount" placeholder="5000"></div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                <label class="lbl-tiny">Участники и индив. взнос</label>
-                <span style="font-size:0.75rem; color:var(--indigo); font-weight:900; cursor:pointer;" onclick="toggleAllParticipants()">Весь класс</span>
+            <div class="input-group"><label class="lbl-tiny">Название проекта</label><input type="text" id="collTitle" placeholder="НГ 2026"></div>
+            <div class="input-group"><label class="lbl-tiny">Общий взнос с чел. (₽)</label><input type="number" id="collAmount" placeholder="5000"></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items: center;">
+                <label class="lbl-tiny" style="margin-bottom:0;">Участники и суммы</label>
+                <span style="font-size:0.75rem; color:var(--indigo); font-weight:900; cursor:pointer; background: #eef2ff; padding: 6px 12px; border-radius: 12px;" onclick="toggleAllParticipants()">Весь класс</span>
             </div>
             <div id="participantSelector" class="scroller"></div>
         </div>
-        <div class="modal-footer">
-            <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-                <button class="btn btn-primary" onclick="saveCollection()">Сохранить изменения</button>
-                <button id="closeCollBtn" class="btn btn-danger" style="display:none;" onclick="requestCloseCollection()">Завершить сбор</button>
-            </div>
-        </div>
+        <div class="modal-footer"><button class="btn btn-primary" onclick="saveCollection()">Сохранить изменения</button></div>
     </div>
 </div>
 
@@ -320,7 +303,7 @@
             <div class="input-group"><label class="lbl-tiny">Куда перенести</label><select id="transferTargetId"></select></div>
             <div class="input-group"><label class="lbl-tiny">Сумма (₽)</label><input type="number" id="transferSum"></div>
         </div>
-        <div class="modal-footer"><button id="transferFinalBtn" class="btn btn-primary" onclick="confirmTransfer()">Выполнить перевод</button></div>
+        <div class="modal-footer"><button class="btn btn-primary" onclick="confirmTransfer()">Перевести</button></div>
     </div>
 </div>
 
@@ -335,9 +318,9 @@
 </div>
 
 <script>
-    let db = { students: [], collections: [], transactions: [] };
-    const KEY = 'CLASS_FUNDS_FINAL_V15_PRO'; 
     const ACCENTS = ['indigo', 'rose', 'amber', 'emerald', 'violet'];
+    let db = { students: [], collections: [], transactions: [] };
+    const KEY = 'CLASS_FUNDS_FINAL_PRO_OFFLINE';
 
     const getToday = () => new Date().toISOString().split('T')[0];
     const getFirstDayOfMonth = () => {
@@ -345,19 +328,25 @@
         return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
     };
     const formatM = (n) => new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)).replace(',', '.') + ' ₽';
-    const showToast = (m) => { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); };
+    const showToast = (m) => { 
+        const t = document.getElementById('toast'); 
+        t.innerText = m; t.style.display = 'block'; 
+        setTimeout(() => t.style.display = 'none', 2500); 
+    };
     const formatDateDisp = (s) => s ? s.split('-').reverse().join('.') : '';
+
+    if ('serviceWorker' in navigator) {
+        const swBlob = new Blob([`
+            const CACHE = 'class-v10';
+            self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll([location.href]))));
+            self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+        `], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+    }
 
     function init() {
         const saved = localStorage.getItem(KEY);
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                db.students = parsed.students || [];
-                db.collections = parsed.collections || [];
-                db.transactions = parsed.transactions || [];
-            } catch (e) { console.error(e); }
-        }
+        if (saved) { try { db = JSON.parse(saved); } catch (e) {} }
         document.getElementById('anaDateStart').value = getFirstDayOfMonth();
         document.getElementById('anaDateEnd').value = getToday();
         render();
@@ -373,11 +362,13 @@
         if(t === 'analytics') renderAnalytics();
     }
 
-    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function showModal(id) { 
+        if(id === 'collModal') renderPartSelector(); 
+        document.getElementById(id).style.display = 'flex'; 
+    }
     function hideModal(id) { document.getElementById(id).style.display = 'none'; }
     function closeModalOnOuterClick(e) { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; }
 
-    // --- Students ---
     function addStudent() {
         const n = document.getElementById('newStudentName').value.trim();
         if(!n) return;
@@ -386,13 +377,12 @@
         document.getElementById('newStudentName').value = '';
         hideModal('studentModal'); save();
     }
-    function delStudent(id) { customConfirm('Удалить ученика?', () => { db.students = db.students.filter(s => s.id !== id); save(); }); }
+    function delStudent(id) { customConfirm('Удалить?', () => { db.students = db.students.filter(s => s.id !== id); save(); }); }
     function triggerClearAll() { customConfirm('Стереть всё?', () => { localStorage.clear(); location.reload(); }); }
 
-    // --- Restore & Backup ---
     function exportBackup() { 
         const b = new Blob([JSON.stringify(db)], { type: 'application/json' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `ClassFunds_Export_${getToday()}.json`; a.click(); 
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `Backup_${getToday()}.json`; a.click(); 
     }
     function triggerRestore() { document.getElementById('restoreFile').click(); }
     function handleRestore(e) { 
@@ -401,24 +391,29 @@
         r.onload = (ev) => { 
             try { 
                 const d = JSON.parse(ev.target.result); 
-                if (d.globalStudents && d.collections) {
-                    db.students = d.globalStudents.map(s => ({ id: s.id, name: s.name }));
+                const forceStr = (v) => v != null ? String(v) : "";
+                if (d.globalStudents || d.collections) {
+                    const rawStudents = d.globalStudents || d.students || [];
+                    db.students = rawStudents.map(s => ({ id: forceStr(s.id), name: s.name }));
                     db.collections = []; db.transactions = [];
-                    d.collections.forEach(col => {
-                        const newCol = { id: col.id, title: col.name, target: col.perPerson || (col.target / (col.participants?.length || 1)), archived: col.status === 'closed', participants: (col.participants || []).map(p => p.id), overrides: col.overrides || {} };
-                        db.collections.push(newCol);
-                        if (col.transactions) col.transactions.forEach(t => {
-                            db.transactions.push({ id: t.id, cid: col.id, sid: t.participantId || 0, val: Math.abs(t.amount), type: t.amount > 0 ? 'in' : 'out', date: t.date, note: t.comment || '' });
+                    if (d.collections) {
+                        d.collections.forEach(col => {
+                            const newCol = { id: forceStr(col.id), title: col.name, target: parseFloat(col.perPerson || col.perPersonGoal || (col.target / (col.participants?.length || 1)) || 0), archived: col.status === 'closed', participants: (col.participants || []).map(p => forceStr(typeof p === 'object' ? p.id : p)), overrides: col.overrides || {} };
+                            db.collections.push(newCol);
+                            if (col.transactions) {
+                                col.transactions.forEach(t => {
+                                    db.transactions.push({ id: forceStr(t.id), cid: forceStr(col.id), sid: forceStr(t.participantId || t.sid || "0"), val: Math.abs(parseFloat(t.amount || t.val || 0)), type: (parseFloat(t.amount || t.val || 0) >= 0 && t.type !== 'out') ? 'in' : 'out', date: t.date, note: t.comment || t.note || '' });
+                                });
+                            }
                         });
-                    });
-                    save(); showToast("Восстановлено из файла");
-                } else if (d.students && d.collections) { db = d; save(); showToast("Восстановлено"); }
-            } catch(err) { showToast("Ошибка формата"); } 
+                    }
+                    save(); showToast("Файл загружен!");
+                } else { showToast("Неверный формат файла"); }
+            } catch(err) { showToast("Ошибка чтения файла"); } 
         }; 
         r.readAsText(f); e.target.value = ""; 
     }
 
-    // --- Excel ---
     function triggerExcelImport() { document.getElementById('excelFile').click(); }
     function handleExcelImport(e) {
         const file = e.target.files[0]; if (!file) return;
@@ -429,8 +424,9 @@
                 const workbook = XLSX.read(data, { type: 'array' });
                 const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
                 const actives = db.collections.filter(c => !c.archived);
-                if (actives.length > 0) processImportData(json, Number(actives[0].id));
-            } catch(err) { showToast("Ошибка файла"); }
+                if (actives.length > 0) processImportData(json, actives[0].id);
+                else showToast("Сначала создайте активный сбор!");
+            } catch(err) { showToast("Ошибка Excel"); }
             e.target.value = "";
         };
         reader.readAsArrayBuffer(file);
@@ -448,100 +444,104 @@
                 if (!s) { s = { id: (Date.now()+index).toString(), name: subject }; db.students.push(s); }
                 db.transactions.push({ id: (Date.now()+index).toString(), cid, sid: s.id, val: sum, type: 'in', date });
             } else if (type.includes('расход')) {
-                db.transactions.push({ id: (Date.now()+index).toString(), cid, sid: 0, val: sum, type: 'out', note: subject, date });
+                db.transactions.push({ id: (Date.now()+index).toString(), cid, sid: "0", val: sum, type: 'out', note: subject, date });
             }
         });
         save();
     }
 
     function exportDebtorsExcel(cid) {
-        const coll = db.collections.find(x => x.id == cid); if (!coll) return;
-        const trs = db.transactions.filter(t => t.cid == cid && t.type === 'in');
+        const coll = db.collections.find(x => x.id === cid); if (!coll) return;
+        const trs = db.transactions.filter(t => t.cid === cid && t.type === 'in');
         const exportData = (coll.participants || []).map(pid => {
             const s = db.students.find(x => String(x.id) === String(pid)); if (!s) return null;
-            const paid = trs.filter(t => String(t.sid) === String(pid)).reduce((sum, t) => sum + t.val, 0);
+            const paid = trs.filter(t => t.sid === pid).reduce((sum, t) => sum + t.val, 0);
             const goal = (coll.overrides && coll.overrides[pid]) ? parseFloat(coll.overrides[pid]) : coll.target;
-            return goal - paid > 0 ? { 'ФИО Должника': s.name, 'Сумма долга': goal - paid } : null;
+            return goal - paid > 0 ? { 'ФИО': s.name, 'Долг': goal - paid } : null;
         }).filter(x => x !== null);
-        if (!exportData.length) return showToast("Должников нет!");
+        if (!exportData.length) return showToast("Долгов нет!");
         const ws = XLSX.utils.json_to_sheet(exportData); const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Долги"); XLSX.writeFile(wb, `Dolgi_${coll.title}.xlsx`);
     }
 
     function exportTransactionsExcel(cid) {
-        const coll = db.collections.find(x => x.id == cid); if (!coll) return;
-        const trs = db.transactions.filter(t => t.cid == cid).sort((a,b) => a.date.localeCompare(b.date));
-        const exportData = trs.map(t => ({
-            'Дата': formatDateDisp(t.date), 'Тип': t.type === 'in' ? 'Приход' : 'Расход',
-            'Кто / На что': t.sid ? (db.students.find(x => x.id == t.sid)?.name || 'Ученик') : (t.note || 'Расход'),
-            'Сумма (₽)': t.val
-        }));
+        const coll = db.collections.find(x => x.id === cid); if (!coll) return;
+        const trs = db.transactions.filter(t => t.cid === cid).sort((a,b) => a.date.localeCompare(b.date));
+        const exportData = trs.map(t => ({ 'Дата': formatDateDisp(t.date), 'Тип': t.type === 'in' ? 'Приход' : 'Расход', 'Кто/Что': t.sid !== "0" ? (db.students.find(x => x.id === t.sid)?.name || 'Ученик') : (t.note || 'Расход'), 'Сумма': t.val }));
         const ws = XLSX.utils.json_to_sheet(exportData); const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "История"); XLSX.writeFile(wb, `History_${coll.title}.xlsx`);
     }
 
-    // --- Core Logic ---
+    function editColl(id) {
+        const c = db.collections.find(x => x.id === id); if (!c) return;
+        document.getElementById('editCollId').value = c.id; document.getElementById('collTitle').value = c.title;
+        document.getElementById('collAmount').value = c.target;
+        renderPartSelector(c.participants || [], c.overrides || {}); 
+        showModal('collModal');
+    }
     function openCollModal() {
         document.getElementById('editCollId').value = ""; document.getElementById('collTitle').value = "";
-        document.getElementById('collAmount').value = ""; document.getElementById('closeCollBtn').style.display = 'none';
-        renderPartSelector([]); showModal('collModal');
-    }
-    function editColl(id) {
-        const c = db.collections.find(x => String(x.id) === String(id)); if (!c) return;
-        document.getElementById('editCollId').value = c.id; document.getElementById('collTitle').value = c.title;
-        document.getElementById('collAmount').value = c.target; document.getElementById('closeCollBtn').style.display = 'block';
-        renderPartSelector(c.participants || [], c.overrides || {}); showModal('collModal');
+        document.getElementById('collAmount').value = "";
+        renderPartSelector([]); 
+        showModal('collModal');
     }
     function saveCollection() {
         const t = document.getElementById('collTitle').value.trim(), a = parseFloat(document.getElementById('collAmount').value), id = document.getElementById('editCollId').value, pIds = Array.from(document.querySelectorAll('.p-check:checked')).map(c => c.dataset.id);
         const ovr = {}; Array.from(document.querySelectorAll('.p-override')).forEach(inp => { if (inp.value && pIds.includes(inp.dataset.id)) ovr[inp.dataset.id] = parseFloat(inp.value); });
         if(!t || isNaN(a) || pIds.length === 0) return showToast("Заполните данные!");
-        if(id) { const c = db.collections.find(x => String(x.id) === String(id)); if(c) { c.title = t; c.target = a; c.participants = pIds; c.overrides = ovr; } } 
+        if(id) { const c = db.collections.find(x => x.id === id); if(c) { c.title = t; c.target = a; c.participants = pIds; c.overrides = ovr; } } 
         else { db.collections.push({ id: Date.now().toString(), title: t, target: a, archived: false, participants: pIds, overrides: ovr }); }
         hideModal('collModal'); save();
     }
-    function renderPartSelector(selected, overrides = {}) {
-        const box = document.getElementById('participantSelector'); if (!db.students.length) { box.innerHTML = '<p>Добавьте учеников</p>'; return; }
-        const selIds = selected.map(String);
-        box.innerHTML = db.students.map(s => `<div class="check-item"><input type="checkbox" class="p-check" data-id="${s.id}" id="ch${s.id}" ${selIds.includes(String(s.id)) ? 'checked' : ''}><label for="ch${s.id}">${s.name}</label><input type="number" class="mini-input p-override" data-id="${s.id}" value="${overrides[s.id] || ""}" placeholder="₽"></div>`).join('');
+    
+    function renderPartSelector(selectedIds = [], overrides = {}) {
+        const box = document.getElementById('participantSelector'); 
+        if (!db.students || db.students.length === 0) { 
+            box.innerHTML = '<div style="padding:20px; text-align:center; opacity:0.6; color:var(--text-main);">Сначала добавьте учеников во вкладке Класс</div>'; 
+            return; 
+        }
+        const selSet = new Set(selectedIds.map(String));
+        box.innerHTML = db.students.map(s => `
+            <div class="check-item">
+                <input type="checkbox" class="p-check" data-id="${s.id}" id="ch${s.id}" ${selSet.has(String(s.id)) ? 'checked' : ''}>
+                <label for="ch${s.id}" style="color:var(--text-main); font-weight:800; cursor:pointer;">${s.name}</label>
+                <input type="number" class="mini-input p-override" data-id="${s.id}" value="${overrides[s.id] || ""}" placeholder="₽">
+            </div>`).join('');
     }
+    
     function toggleAllParticipants() { 
-        const checks = document.querySelectorAll('.p-check'); const all = Array.from(checks).every(c => c.checked);
+        const checks = document.querySelectorAll('.p-check'); if (!checks.length) return;
+        const all = Array.from(checks).every(c => c.checked);
         checks.forEach(c => c.checked = !all); 
     }
 
-    // --- Transfer ---
     function openTransfer(cid, andClose = false) {
-        const bal = getBalance(cid), targets = db.collections.filter(x => !x.archived && String(x.id) !== String(cid));
+        const bal = getBalance(cid), targets = db.collections.filter(x => !x.archived && x.id !== cid);
         if(!targets.length) {
-            if(andClose) customConfirm(`Сборов нет. Закрыть и списать ${formatM(bal)}?`, () => {
-                const c = db.collections.find(x => String(x.id) === String(cid)); if(c) { c.archived = true; save(); showToast("Закрыто"); }
-            }); else showToast('Нет активных сборов для переноса');
-            return;
+            if(andClose) customConfirm(`Закрыть и списать ${formatM(bal)}?`, () => { const c = db.collections.find(x => x.id === cid); if(c) { c.archived = true; save(); showToast("Закрыто"); } });
+            else showToast('Нет сборов для переноса'); return;
         }
         document.getElementById('transferSourceId').value = cid; document.getElementById('shouldCloseSource').value = andClose ? "true" : "";
-        document.getElementById('transferSum').value = bal; document.getElementById('transferSummaryInfo').innerText = `К переводу: ${formatM(bal)}`;
+        document.getElementById('transferSum').value = bal; document.getElementById('transferSummaryInfo').innerText = `К переносу: ${formatM(bal)}`;
         document.getElementById('transferTargetId').innerHTML = targets.map(x => `<option value="${x.id}">${x.title}</option>`).join('');
         showModal('transferModal');
     }
     function confirmTransfer() {
         const sid = document.getElementById('transferSourceId').value, tid = document.getElementById('transferTargetId').value, val = parseFloat(document.getElementById('transferSum').value), close = document.getElementById('shouldCloseSource').value === "true";
         if(isNaN(val) || val < 0) return showToast("Укажите сумму!");
-        const s = db.collections.find(x => String(x.id) === sid), t = db.collections.find(x => String(x.id) === tid);
+        const s = db.collections.find(x => x.id === sid), t = db.collections.find(x => x.id === tid);
         if(!s || !t) return;
-        db.transactions.push({ id: Date.now().toString(), cid: sid, sid: 0, val, type: 'out', note: `Перенос в "${t.title}"`, date: getToday() });
-        db.transactions.push({ id: (Date.now()+1).toString(), cid: tid, sid: 0, val, type: 'in', note: `Перенос из "${s.title}"`, date: getToday() });
-        if(close) s.archived = true; hideModal('transferModal'); save(); showToast("Перенесено");
+        db.transactions.push({ id: Date.now().toString(), cid: sid, sid: "0", val, type: 'out', note: `Перенос в "${t.title}"`, date: getToday() });
+        db.transactions.push({ id: (Date.now()+1).toString(), cid: tid, sid: "0", val, type: 'in', note: `Перенос из "${s.title}"`, date: getToday() });
+        if(close) s.archived = true; hideModal('transferModal'); save();
     }
 
-    // --- Finance ---
     function openPay(cid, tid = null) {
-        const coll = db.collections.find(x => String(x.id) === String(cid)); if (!coll) return;
+        const coll = db.collections.find(x => x.id === cid); if (!coll) return;
         document.getElementById('transCollId').value = cid;
         document.getElementById('transSid').innerHTML = db.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         if(tid) {
-            const t = db.transactions.find(x => String(x.id) === String(tid));
-            if(!t) return;
+            const t = db.transactions.find(x => x.id === tid); if(!t) return;
             document.getElementById('editTransId').value = t.id; document.getElementById('transSid').value = t.sid;
             document.getElementById('transVal').value = t.val; document.getElementById('transDate').value = t.date;
         } else {
@@ -553,15 +553,14 @@
     function confirmTransaction() {
         const cid = document.getElementById('transCollId').value, sid = document.getElementById('transSid').value, val = parseFloat(document.getElementById('transVal').value), date = document.getElementById('transDate').value, tid = document.getElementById('editTransId').value;
         if(isNaN(val) || !date) return showToast("Заполните данные!");
-        if(tid) { const t = db.transactions.find(x => String(x.id) === String(tid)); if(t){ t.sid = sid; t.val = val; t.date = date; } } 
+        if(tid) { const t = db.transactions.find(x => x.id === tid); if(t){ t.sid = sid; t.val = val; t.date = date; } } 
         else { db.transactions.push({ id: Date.now().toString(), cid, sid, val, type: 'in', date }); }
         hideModal('transModal'); save();
     }
     function openExp(cid, tid = null) {
         document.getElementById('expCollId').value = cid;
         if(tid) {
-            const t = db.transactions.find(x => String(x.id) === String(tid));
-            if(!t) return;
+            const t = db.transactions.find(x => x.id === tid); if(!t) return;
             document.getElementById('editExpId').value = t.id; document.getElementById('expNote').value = t.note;
             document.getElementById('expSum').value = t.val; document.getElementById('expDate').value = t.date;
         } else {
@@ -574,58 +573,40 @@
         const cid = document.getElementById('expCollId').value, val = parseFloat(document.getElementById('expSum').value), note = document.getElementById('expNote').value.trim(), date = document.getElementById('expDate').value, tid = document.getElementById('editExpId').value;
         if(isNaN(val) || !date) return showToast("Заполните данные!");
         if(tid) { const t = db.transactions.find(x => String(x.id) === String(tid)); if(t){ t.note = note; t.val = val; t.date = date; } } 
-        else { db.transactions.push({ id: Date.now().toString(), cid, sid: 0, val, type: 'out', note, date }); }
+        else { db.transactions.push({ id: Date.now().toString(), cid, sid: "0", val, type: 'out', note, date }); }
         hideModal('expModal'); save();
     }
 
-    // --- Archive Toggling ---
     function toggleArchiveDetails(cid) {
         const details = document.getElementById(`details-${cid}`);
         const btn = document.getElementById(`btn-details-${cid}`);
-        const isActive = details.classList.contains('active');
-        if (!isActive) { details.classList.add('active'); btn.innerHTML = `<i class="fas fa-chevron-up"></i> Скрыть`; } 
+        if (!details.classList.contains('active')) { details.classList.add('active'); btn.innerHTML = `<i class="fas fa-chevron-up"></i> Скрыть`; } 
         else { details.classList.remove('active'); btn.innerHTML = `<i class="fas fa-chevron-down"></i> Участники`; }
     }
 
     function render() {
         const actives = db.collections.filter(c => !c.archived);
-        const activeIds = actives.map(c => String(c.id));
-        const total = db.transactions.reduce((acc, t) => activeIds.includes(String(t.cid)) ? (t.type === 'in' ? acc + t.val : acc - t.val) : acc, 0);
+        const activeIds = actives.map(c => c.id);
+        const total = db.transactions.reduce((acc, t) => activeIds.includes(t.cid) ? (t.type === 'in' ? acc + t.val : acc - t.val) : acc, 0);
         document.getElementById('globalBalance').innerText = formatM(total);
         document.getElementById('headerCollectionList').innerHTML = actives.slice(0,3).map(c => `<div style="text-align:center; min-width: 90px;"><span class="st-lbl" style="white-space: nowrap; margin-bottom: 2px;">${c.title}</span><span style="font-weight:900; font-size: 0.95rem;">${formatM(getBalance(c.id))}</span></div>`).join('');
 
         document.getElementById('collectionsList').innerHTML = actives.map((c, i) => {
-            const trs = db.transactions.filter(t => t.cid == c.id);
+            const trs = db.transactions.filter(t => t.cid === c.id);
             const inc = trs.filter(t => t.type === 'in').reduce((s, t) => s + t.val, 0);
             const out = trs.filter(t => t.type === 'out').reduce((s, t) => s + t.val, 0);
-            const paidSums = {}; trs.filter(t => t.type === 'in').forEach(t => { paidSums[String(t.sid)] = (paidSums[String(t.sid)] || 0) + t.val; });
+            const paidSums = {}; trs.filter(t => t.type === 'in').forEach(t => { paidSums[t.sid] = (paidSums[t.sid] || 0) + t.val; });
             let targetTotal = 0; let paidCount = 0;
             (c.participants || []).forEach(pid => { const goal = (c.overrides && c.overrides[pid]) ? c.overrides[pid] : c.target; targetTotal += goal; if ((paidSums[pid] || 0) >= goal) paidCount++; });
             const accent = ACCENTS[i % ACCENTS.length];
-            return `<div class="card t-${accent}">
-                    <div class="card-header"><div class="card-title" onclick="editColl('${c.id}')">${c.title}</div><div class="card-actions"><i class="fas fa-random" onclick="openTransfer('${c.id}')"></i><i class="fas fa-edit" onclick="editColl('${c.id}')"></i><i class="fas fa-box-archive" onclick="handleArchiveRequest('${c.id}')"></i></div></div>
-                    <div class="grid-stats">
-                        <div class="st-item"><span class="st-lbl">Собрано</span><span class="st-val text-success">+${formatM(inc)}</span></div>
-                        <div class="st-item"><span class="st-lbl">Расход</span><span class="st-val text-danger">-${formatM(out)}</span></div>
-                        <div class="st-item"><span class="st-lbl">Касса (остаток)</span><span class="st-val">${formatM(inc-out)}</span></div>
-                        <div class="st-item"><span class="st-lbl">Осталось дособирать</span><span class="st-val text-amber">${formatM(Math.max(0, targetTotal - inc))}</span></div>
-                    </div>
-                    <div class="progress-line"><div class="progress-bar" style="width: ${targetTotal > 0 ? Math.min(100, (inc/targetTotal)*100) : 0}%"></div></div>
-                    <div class="flex-row"><div class="pill"><i class="fas fa-check-circle"></i> ${paidCount} / ${c.participants.length}</div><span style="font-size:0.75rem; color:var(--text-muted); font-weight:800;">План: ${formatM(targetTotal)}</span></div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:24px;"><button class="btn btn-primary" onclick="openPay('${c.id}')" style="background:var(--${accent})">Взнос</button><button class="btn btn-glass" onclick="openExp('${c.id}')">Трата</button></div>
-                </div>`;
+            return `<div class="card t-${accent}"><div class="card-header"><div class="card-title" onclick="editColl('${c.id}')">${c.title}</div><div class="card-actions"><i class="fas fa-random" onclick="openTransfer('${c.id}')"></i><i class="fas fa-edit" onclick="editColl('${c.id}')"></i><i class="fas fa-box-archive" onclick="handleArchiveRequest('${c.id}')"></i></div></div><div class="grid-stats"><div class="st-item"><span class="st-lbl">Собрано</span><span class="st-val txt-collected">+${formatM(inc)}</span></div><div class="st-item"><span class="st-lbl">Расход</span><span class="st-val txt-expense">-${formatM(out)}</span></div><div class="st-item"><span class="st-lbl">Касса (остаток)</span><span class="st-val">${formatM(inc-out)}</span></div><div class="st-item"><span class="st-lbl">Осталось собрать</span><span class="st-val txt-remain">${formatM(Math.max(0, targetTotal - inc))}</span></div></div><div class="progress-line"><div class="progress-bar" style="width: ${targetTotal > 0 ? Math.min(100, (inc/targetTotal)*100) : 0}%"></div></div><div class="flex-row"><div class="pill"><i class="fas fa-user-circle"></i> Взнос с чел: ${formatM(c.target)}</div><div class="pill"><i class="fas fa-check-circle"></i> ${paidCount} / ${c.participants.length}</div></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:24px;"><button class="btn btn-primary" onclick="openPay('${c.id}')" style="background:var(--${accent})">Взнос</button><button class="btn btn-glass" onclick="openExp('${c.id}')">Трата</button></div></div>`;
         }).join('') || '<p style="text-align:center; padding:40px; opacity:0.5;">Сборов нет</p>';
 
         document.getElementById('archiveList').innerHTML = db.collections.filter(c => c.archived).map(c => {
-            const trs = db.transactions.filter(t => t.cid == c.id);
+            const trs = db.transactions.filter(t => t.cid === c.id);
             const paidSums = {}; trs.filter(t => t.type === 'in').forEach(t => { paidSums[String(t.sid)] = (paidSums[String(t.sid)] || 0) + t.val; });
             const listHtml = (c.participants || []).map(pid => { const s = db.students.find(x => String(x.id) === pid); return s ? `<div class="archive-item"><span>${s.name}</span><b>${formatM(paidSums[pid] || 0)}</b></div>` : ''; }).join('');
-            return `<div class="card" style="opacity:1; border:none; background:rgba(255,255,255,0.7); padding: 25px;">
-                    <div class="card-header" style="margin-bottom: 5px;"><div class="card-title" style="font-size: 1.3rem;">${c.title}</div><i class="fas fa-rotate-left" onclick="toggleArchive('${c.id}')" style="cursor:pointer; color: var(--text-muted);"></i></div>
-                    <div style="font-weight:800; font-size:1.1rem; color:var(--text-main);">Итого: ${formatM(getBalance(c.id))}</div>
-                    <button class="btn-toggle-archive" id="btn-details-${c.id}" onclick="toggleArchiveDetails('${c.id}')"><i class="fas fa-chevron-down"></i> Участники</button>
-                    <div class="archive-details" id="details-${c.id}"><span class="lbl-tiny" style="margin-bottom: 10px;">Взносы:</span>${listHtml}</div>
-                </div>`;
+            return `<div class="card" style="opacity:1; border:none; background:rgba(255,255,255,0.7); padding: 25px;"><div class="card-header" style="margin-bottom: 5px;"><div class="card-title" style="font-size: 1.3rem;">${c.title}</div><i class="fas fa-rotate-left" onclick="toggleArchive('${c.id}')" style="cursor:pointer; color: var(--text-muted);"></i></div><div style="font-weight:800; font-size:1.1rem; color:var(--text-main);">Итого: ${formatM(getBalance(c.id))}</div><button class="btn-toggle-archive" id="btn-details-${c.id}" onclick="toggleArchiveDetails('${c.id}')"><i class="fas fa-chevron-down"></i> Участники</button><div class="archive-details" id="details-${c.id}"><span class="lbl-tiny" style="margin-bottom: 10px;">Взносы:</span>${listHtml}</div></div>`;
         }).join('') || '<p style="text-align:center; opacity:0.5;">Архив пуст</p>';
 
         document.getElementById('studentsList').innerHTML = db.students.map(s => `<div class="card" style="padding:18px; margin-bottom:12px; border-radius: 24px; background:white;"><div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:1.1rem; font-weight:900; color:var(--text-main);">${s.name}</b><i class="fas fa-trash-alt" onclick="delStudent('${s.id}')" style="color:var(--danger); opacity:0.3; cursor:pointer;"></i></div></div>`).join('') || '<p style="text-align:center; opacity:0.5;">Класс пуст</p>';
@@ -635,10 +616,12 @@
         const sid = document.getElementById('anaSelect').value, start = document.getElementById('anaDateStart').value, end = document.getElementById('anaDateEnd').value;
         const select = document.getElementById('anaSelect');
         const activeCols = db.collections.filter(c => !c.archived);
-        select.innerHTML = '<option value="all">Общая касса</option>' + activeCols.map(c => `<option value="${c.id}" ${String(c.id) == String(sid) ? 'selected' : ''}>${c.title}</option>`).join('');
-        
-        let baseTrs = db.transactions;
-        if (sid !== 'all') baseTrs = db.transactions.filter(t => String(t.cid) === String(sid));
+        let selectHtml = activeCols.map(c => `<option value="${c.id}" ${c.id === sid ? 'selected' : ''}>${c.title}</option>`).join('');
+        select.innerHTML = selectHtml || '<option value="">Нет активных сборов</option>';
+        const currentId = select.value;
+        if (!currentId) { document.getElementById('anaContent').innerHTML = '<p style="text-align:center; padding:40px; opacity:0.5;">Выберите активный сбор</p>'; return; }
+
+        let baseTrs = db.transactions.filter(t => t.cid === currentId);
         const trsBefore = baseTrs.filter(t => t.date < start);
         const startBal = trsBefore.reduce((acc, t) => t.type === 'in' ? acc + t.val : acc - t.val, 0);
         const trsPeriod = baseTrs.filter(t => t.date >= start && t.date <= end);
@@ -646,35 +629,42 @@
         const periodOut = trsPeriod.filter(t => t.type === 'out').reduce((s, t) => s + t.val, 0);
         const endBal = startBal + periodInc - periodOut;
 
-        let partHtml = '';
-        if (sid !== 'all') {
-            const c = db.collections.find(x => String(x.id) === String(sid));
-            if (c) {
-                const pIds = (c.participants || []).map(String);
-                const pms = {}; baseTrs.filter(t => t.type === 'in' && t.date <= end).forEach(t => { pms[String(t.sid)] = (pms[String(t.sid)] || 0) + t.val; });
-                partHtml = `<div style="margin-top:35px; margin-bottom:20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 style="font-weight:900; color:var(--text-main);">Долги на ${formatDateDisp(end)}</h3><div style="display:flex; gap:8px;"><button class="btn btn-glass" style="padding:10px; font-size:0.75rem;" onclick="exportDebtorsExcel('${c.id}')">Долги</button><button class="btn btn-glass" style="padding:10px; font-size:0.75rem;" onclick="exportTransactionsExcel('${c.id}')">Выписка</button></div></div></div><div class="card" style="border:none; padding:0; background:none; box-shadow:none;">` + 
-                pIds.map(pid => {
-                    const s = db.students.find(x => String(x.id) === pid); if (!s) return '';
-                    const paid = pms[pid] || 0, goal = (c.overrides && c.overrides[pid]) ? c.overrides[pid] : c.target;
-                    let st = paid >= goal ? `<span class="text-success">Сдано</span>` : `<span class="text-danger">Долг: ${formatM(goal-paid)}</span>`;
-                    return `<div class="check-item" style="padding: 14px 0; border-bottom:1px solid rgba(0,0,0,0.03);"><span>${s.name}</span><div style="text-align:right">${st}</div></div>`;
-                }).join('') + '</div>';
-            }
-        }
+        const c = db.collections.find(x => x.id === currentId);
+        const pms = {}; 
+        baseTrs.filter(t => t.type === 'in' && t.date <= end).forEach(t => { pms[t.sid] = (pms[t.sid] || 0) + t.val; });
+        const officialParticipants = c.participants || [];
+        const extraPayers = Object.keys(pms).filter(sid => !officialParticipants.includes(sid));
+        const allToDisplay = Array.from(new Set([...officialParticipants, ...extraPayers])).sort((a,b) => {
+            const s1 = db.students.find(x => String(x.id) === String(a))?.name || "";
+            const s2 = db.students.find(x => String(x.id) === String(b))?.name || "";
+            return s1.localeCompare(s2);
+        });
+
+        let partHtml = `<div style="margin-top:35px; margin-bottom:20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 style="font-weight:900; color:var(--text-main);">Задолженности на ${formatDateDisp(end)}</h3><div style="display:flex; gap:8px;"><button class="btn btn-glass" style="padding:10px; font-size:0.75rem;" onclick="exportDebtorsExcel('${c.id}')">Долги</button><button class="btn btn-glass" style="padding:10px; font-size:0.75rem;" onclick="exportTransactionsExcel('${c.id}')">Выписка</button></div></div></div><div class="card" style="border:none; padding:0; background:none; box-shadow:none;">` + 
+        allToDisplay.map(sid => {
+            const s = db.students.find(x => String(x.id) === String(sid)); if (!s) return '';
+            const isOfficial = officialParticipants.includes(String(sid));
+            const paid = pms[sid] || 0;
+            const goal = isOfficial ? ((c.overrides && c.overrides[sid]) ? parseFloat(c.overrides[sid]) : c.target) : 0;
+            let st = ""; let tag = isOfficial ? "" : ' <span class="tag-outside">(вне списка)</span>';
+            if (!isOfficial) { st = `<span class="ana-overpayment">Переплата: ${formatM(paid)}</span>`; }
+            else if (paid >= goal && goal > 0) { if (paid > goal) st = `<span class="ana-overpayment">Переплата: ${formatM(paid - goal)}</span>`; else st = `<span class="ana-success">Сдано</span>`; }
+            else { st = `<span class="ana-danger">Долг: ${formatM(goal - paid)}</span>`; }
+            return `<div class="check-item" style="padding: 14px 0; border-bottom:1px solid rgba(0,0,0,0.03);"><span>${s.name}${tag}</span><div style="text-align:right">${st}</div></div>`;
+        }).join('') + '</div>';
+
         const hist = trsPeriod.sort((a,b) => b.date.localeCompare(a.date)).map(t => {
-            const n = t.sid ? (db.students.find(x => x.id == t.sid)?.name || 'Ученик') : (t.note || 'Расход');
+            const n = t.sid !== "0" ? (db.students.find(x => x.id === t.sid)?.name || 'Ученик') : (t.note || 'Расход');
             return `<div class="history-card"><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b>${n}</b><span style="${t.type === 'in' ? 'color:var(--success)' : 'color:var(--danger)'}">${t.type === 'in' ? '+' : '-'} ${formatM(t.val)}</span></div><div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-size:0.8rem; color:var(--text-muted); font-weight:800;">${formatDateDisp(t.date)}</span><div style="display:flex; gap:10px;"><button class="btn-glass" style="padding:6px 14px; font-size:0.65rem;" onclick="${t.type==='in' ? 'openPay' : 'openExp'}('${t.cid}','${t.id}')">Изм</button><button class="btn-glass text-danger" style="padding:6px 14px; font-size:0.65rem;" onclick="delTrans('${t.id}')">Удал</button></div></div></div>`;
         }).join('');
-        document.getElementById('anaContent').innerHTML = `<div class="summary-card ana-summary"><div class="ana-row"><span class="ana-label">Сальдо на ${formatDateDisp(start)}</span><span class="ana-val-xl">${formatM(startBal)}</span></div><div class="ana-row"><span class="ana-label">Приход</span><span class="ana-val-xl text-success">+ ${formatM(periodInc)}</span></div><div class="ana-row"><span class="ana-label">Расход</span><span class="ana-val-xl text-danger">- ${formatM(periodOut)}</span></div><div class="ana-row" style="border:none;"><b class="ana-label" style="font-size:0.9rem;">ИТОГО НА ${formatDateDisp(end)}</b><span class="ana-val-xl" style="font-size:2rem;">${formatM(endBal)}</span></div></div>${partHtml}<h3 style="margin:40px 0 16px; font-weight:900; color:var(--text-main);">Операции</h3>${hist || 'Нет данных'}`;
+        document.getElementById('anaContent').innerHTML = `<div class="summary-card ana-summary"><div class="ana-row"><span class="ana-label">Сальдо на ${formatDateDisp(start)}</span><span class="ana-val-xl">${formatM(startBal)}</span></div><div class="ana-row"><span class="ana-label">Приход за период</span><span class="ana-val-xl ana-success">+ ${formatM(periodInc)}</span></div><div class="ana-row"><span class="ana-label">Расход за период</span><span class="ana-val-xl ana-danger">- ${formatM(periodOut)}</span></div><div class="ana-row" style="border:none;"><b class="ana-label" style="font-size:0.9rem;">ИТОГО НА ${formatDateDisp(end)}</b><span class="ana-val-xl" style="font-size:2rem;">${formatM(endBal)}</span></div></div>${partHtml}<h3 style="margin:40px 0 16px; font-weight:900; color:var(--text-main);">Операции</h3>${hist || 'Нет данных'}`;
     }
 
-    function getBalance(cid) { const trs = db.transactions.filter(t => String(t.cid) === String(cid)); return trs.filter(t => t.type === 'in').reduce((s,t) => s + t.val, 0) - trs.filter(t => t.type === 'out').reduce((s,t) => s + t.val, 0); }
-    function delTrans(id) { customConfirm('Удалить операцию?', () => { db.transactions = db.transactions.filter(t => t.id != id); save(); if(document.getElementById('analytics').classList.contains('active')) renderAnalytics(); }); }
-    function toggleArchive(id) { const c = db.collections.find(x => String(x.id) === String(id)); if(c) { c.archived = !c.archived; save(); } }
-    function handleArchiveRequest(id) { const bal = getBalance(id); if(bal > 0) openTransfer(id, true); else { customConfirm("Архивировать сбор?", () => { const c = db.collections.find(x => String(x.id) === String(id)); if(c) { c.archived = true; save(); } }); } }
-    function requestCloseCollection() { const id = document.getElementById('editCollId').value; hideModal('collModal'); handleArchiveRequest(id); }
+    function getBalance(cid) { const trs = db.transactions.filter(t => t.cid === cid); return trs.filter(t => t.type === 'in').reduce((s,t) => s + t.val, 0) - trs.filter(t => t.type === 'out').reduce((s,t) => s + t.val, 0); }
+    function delTrans(id) { customConfirm('Удалить?', () => { db.transactions = db.transactions.filter(t => t.id !== id); save(); if(document.getElementById('analytics').classList.contains('active')) renderAnalytics(); }); }
+    function toggleArchive(id) { const c = db.collections.find(x => x.id === id); if(c) { c.archived = !c.archived; save(); } }
+    function handleArchiveRequest(id) { const bal = getBalance(id); if(bal > 0) openTransfer(id, true); else { customConfirm("Архивировать?", () => { const c = db.collections.find(x => x.id === id); if(c) { c.archived = true; save(); } }); } }
     function customConfirm(text, onConfirm) { const modal = document.getElementById('confirmModal'); document.getElementById('confirmText').innerText = text; const btn = document.getElementById('confirmBtn'); modal.style.display = 'flex'; btn.onclick = () => { hideModal('confirmModal'); onConfirm(); }; }
-
     window.onload = init;
 </script>
 </body>
