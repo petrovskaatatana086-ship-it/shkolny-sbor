@@ -642,14 +642,14 @@
             let targetTotal = 0; let paidCount = 0;
             (c.participants || []).forEach(pid => { const goal = (c.overrides && c.overrides[pid]) ? c.overrides[pid] : c.target; targetTotal += goal; if ((paidSums[pid] || 0) >= goal) paidCount++; });
             const accent = ACCENTS[i % ACCENTS.length];
-            return `<div class="card t-${accent}"><div class="card-header"><div class="card-title" onclick="editColl('${c.id}')">${c.title}</div><div class="card-actions"><i class="fas fa-random" onclick="openTransfer('${c.id}')"></i><i class="fas fa-edit" onclick="editColl('${c.id}')"></i><i class="fas fa-box-archive" onclick="handleArchiveRequest('${c.id}')"></i></div></div><div class="grid-stats"><div class="st-item"><span class="st-lbl">Собрано</span><span class="st-val txt-collected">+${formatM(inc)}</span></div><div class="st-item"><span class="st-lbl">Расход</span><span class="st-val txt-expense">-${formatM(out)}</span></div><div class="st-item"><span class="st-lbl">Касса (остаток)</span><span class="st-val">${formatM(inc-out)}</span></div><div class="st-item"><span class="st-lbl">Осталось собрать</span><span class="st-val txt-remain">${formatM(Math.max(0, targetTotal - inc))}</span></div></div><div class="progress-line"><div class="progress-bar" style="width: ${targetTotal > 0 ? Math.min(100, (inc/targetTotal)*100) : 0}%"></div></div><div class="flex-row"><div class="pill"><i class="fas fa-user-circle"></i> Взнос с чел: ${formatM(c.target)}</div><div class="pill"><i class="fas fa-check-circle"></i> ${paidCount} / ${c.participants.length}</div></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:24px;"><button class="btn btn-primary" onclick="openPay('${c.id}')" style="background:var(--${accent})">Взнос</button><button class="btn btn-glass" onclick="openExp('${c.id}')">Трата</button></div></div>`;
+            return `<div class="card t-${accent}"><div class="card-header"><div class="card-title" onclick="editColl('${c.id}')">${c.title}</div><div class="card-actions"><i class="fas fa-random" title="Перенос" onclick="openTransfer('${c.id}')"></i><i class="fas fa-edit" title="Редактировать" onclick="editColl('${c.id}')"></i><i class="fas fa-box-archive" title="В архив" onclick="handleArchiveRequest('${c.id}')"></i><i class="fas fa-trash-alt" title="Удалить сбор" style="color:var(--danger);" onclick="deleteCollection('${c.id}')"></i></div></div><div class="grid-stats"><div class="st-item"><span class="st-lbl">Собрано</span><span class="st-val txt-collected">+${formatM(inc)}</span></div><div class="st-item"><span class="st-lbl">Расход</span><span class="st-val txt-expense">-${formatM(out)}</span></div><div class="st-item"><span class="st-lbl">Касса (остаток)</span><span class="st-val">${formatM(inc-out)}</span></div><div class="st-item"><span class="st-lbl">Осталось собрать</span><span class="st-val txt-remain">${formatM(Math.max(0, targetTotal - inc))}</span></div></div><div class="progress-line"><div class="progress-bar" style="width: ${targetTotal > 0 ? Math.min(100, (inc/targetTotal)*100) : 0}%"></div></div><div class="flex-row"><div class="pill"><i class="fas fa-user-circle"></i> Взнос с чел: ${formatM(c.target)}</div><div class="pill"><i class="fas fa-check-circle"></i> ${paidCount} / ${c.participants.length}</div></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:24px;"><button class="btn btn-primary" onclick="openPay('${c.id}')" style="background:var(--${accent})">Взнос</button><button class="btn btn-glass" onclick="openExp('${c.id}')">Трата</button></div></div>`;
         }).join('') || '<p style="text-align:center; padding:40px; opacity:0.5;">Сборов нет</p>';
 
         document.getElementById('archiveList').innerHTML = db.collections.filter(c => c.archived).map(c => {
             const trs = db.transactions.filter(t => t.cid === c.id);
             const paidSums = {}; trs.filter(t => t.type === 'in').forEach(t => { paidSums[String(t.sid)] = (paidSums[String(t.sid)] || 0) + t.val; });
             const listHtml = (c.participants || []).map(pid => { const s = db.students.find(x => String(x.id) === pid); return s ? `<div class="archive-item"><span>${s.name}</span><b>${formatM(paidSums[pid] || 0)}</b></div>` : ''; }).join('');
-            return `<div class="card" style="opacity:1; border:none; background:rgba(255,255,255,0.7); padding: 25px;"><div class="card-header" style="margin-bottom: 5px;"><div class="card-title" style="font-size: 1.3rem;">${c.title}</div><i class="fas fa-rotate-left" onclick="toggleArchive('${c.id}')" style="cursor:pointer; color: var(--text-muted);"></i></div><div style="font-weight:800; font-size:1.1rem; color:var(--text-main);">Итого: ${formatM(getBalance(c.id))}</div><button class="btn-toggle-archive" id="btn-details-${c.id}" onclick="toggleArchiveDetails('${c.id}')"><i class="fas fa-chevron-down"></i> Участники</button><div class="archive-details" id="details-${c.id}"><span class="lbl-tiny" style="margin-bottom: 10px;">Взносы:</span>${listHtml}</div></div>`;
+            return `<div class="card" style="opacity:1; border:none; background:rgba(255,255,255,0.7); padding: 25px;"><div class="card-header" style="margin-bottom: 5px;"><div class="card-title" style="font-size: 1.3rem;">${c.title}</div><div class="card-actions"><i class="fas fa-rotate-left" title="Вернуть из архива" onclick="toggleArchive('${c.id}')" style="cursor:pointer; color: var(--text-muted);"></i><i class="fas fa-trash-alt" title="Удалить сбор" onclick="deleteCollection('${c.id}')" style="cursor:pointer; color: var(--danger);"></i></div></div><div style="font-weight:800; font-size:1.1rem; color:var(--text-main);">Итого: ${formatM(getBalance(c.id))}</div><button class="btn-toggle-archive" id="btn-details-${c.id}" onclick="toggleArchiveDetails('${c.id}')"><i class="fas fa-chevron-down"></i> Участники</button><div class="archive-details" id="details-${c.id}"><span class="lbl-tiny" style="margin-bottom: 10px;">Взносы:</span>${listHtml}</div></div>`;
         }).join('') || '<p style="text-align:center; opacity:0.5;">Архив пуст</p>';
 
         document.getElementById('studentsList').innerHTML = db.students.map(s => `<div class="card" style="padding:18px; margin-bottom:12px; border-radius: 24px; background:white;"><div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:1.1rem; font-weight:900; color:var(--text-main);">${s.name}</b><i class="fas fa-trash-alt" onclick="delStudent('${s.id}')" style="color:var(--danger); opacity:0.3; cursor:pointer;"></i></div></div>`).join('') || '<p style="text-align:center; opacity:0.5;">Класс пуст</p>';
@@ -693,11 +693,9 @@
             if (!isOfficial) { st = `<span class="ana-overpayment">Переплата: ${formatM(paid)}</span>`; }
             else if (paid >= goal && goal > 0) { if (paid > goal) st = `<span class="ana-overpayment">Переплата: ${formatM(paid - goal)}</span>`; else st = `<span class="ana-success">Сдано</span>`; }
             else { st = `<span class="ana-danger">Долг: ${formatM(goal - paid)}</span>`; }
-            const removeBtn = isOfficial ? `<button class="mini-danger-btn" title="Убрать из этого сбора" onclick="removeParticipantFromCollection('${c.id}', '${sid}')"><i class="fas fa-user-minus"></i></button>` : "";
             return `<div class="check-item" style="padding: 14px 0; border-bottom:1px solid rgba(0,0,0,0.03);">
                 <span style="flex:1; font-weight:800;">${s.name}${tag}</span>
                 <div style="text-align:right">${st}</div>
-                ${removeBtn}
             </div>`;
         }).join('') + '</div>';
 
@@ -709,6 +707,17 @@
     }
 
     function getBalance(cid) { const trs = db.transactions.filter(t => t.cid === cid); return trs.filter(t => t.type === 'in').reduce((s,t) => s + t.val, 0) - trs.filter(t => t.type === 'out').reduce((s,t) => s + t.val, 0); }
+    function deleteCollection(id) {
+        const c = db.collections.find(x => String(x.id) === String(id));
+        if (!c) return;
+        customConfirm(`Удалить сбор «${c.title}»? Все операции этого сбора тоже будут удалены. Ученики в классе останутся.`, () => {
+            db.collections = db.collections.filter(x => String(x.id) !== String(id));
+            db.transactions = db.transactions.filter(t => String(t.cid) !== String(id));
+            save();
+            if (document.getElementById('analytics').classList.contains('active')) renderAnalytics();
+            showToast("Сбор удален");
+        });
+    }
     function delTrans(id) { customConfirm('Удалить?', () => { db.transactions = db.transactions.filter(t => t.id !== id); save(); if(document.getElementById('analytics').classList.contains('active')) renderAnalytics(); }); }
     function toggleArchive(id) { const c = db.collections.find(x => x.id === id); if(c) { c.archived = !c.archived; save(); } }
     function handleArchiveRequest(id) { const bal = getBalance(id); if(bal > 0) openTransfer(id, true); else { customConfirm("Архивировать?", () => { const c = db.collections.find(x => x.id === id); if(c) { c.archived = true; save(); } }); } }
